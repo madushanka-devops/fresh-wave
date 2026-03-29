@@ -60,6 +60,13 @@ export default function AdminDashboard() {
           onClick={() => navigate('/admin/feedback')}
         />
 
+        <DashboardCard
+          icon="💳"
+          title="Billing"
+          description="View and print customer bills"
+          onClick={() => navigate('/admin/billing')}
+        />
+
       </div>
     </div>
   )

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '../../firebase/config'
 
@@ -29,6 +29,7 @@ const STATUS_INFO = {
 }
 
 export default function OrderTracking() {
+  const navigate = useNavigate()
   const { orderId } = useParams()
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -134,6 +135,21 @@ export default function OrderTracking() {
         </div>
 
       </div>
+
+      {/* Feedback Button - shows when order is served */}
+      {order.status === 'Served' && (
+      <div className="bg-white rounded-2xl shadow p-6 text-center">
+        <p className="text-2xl mb-2">🎉</p>
+        <h3 className="font-bold text-gray-800">Enjoy your meal!</h3>
+        <p className="text-gray-400 text-sm mt-1">We'd love to hear your feedback</p>
+        <button
+          onClick={() => navigate(`/feedback/${orderId}`)}
+          className="mt-4 bg-orange-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-600 transition"
+        >
+        Leave Feedback ⭐
+        </button>
+      </div>
+      )}
     </div>
   )
 }
