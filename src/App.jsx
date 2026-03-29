@@ -13,6 +13,7 @@ import AdminOrders from './pages/admin/AdminOrders'
 import Billing from './pages/admin/Billing'
 import Feedback from './pages/customer/Feedback'
 import AdminFeedback from './pages/admin/AdminFeedback'
+import WaiterDashboard from './pages/waiter/WaiterDashboard'
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
         <Route path="/order-tracking/:orderId" element={<OrderTracking />} />
         <Route path="/feedback/:orderId" element={<Feedback />} />
         <Route path="/kitchen" element={<KitchenDashboard />} />
+        <Route path="/waiter" element={<WaiterDashboard />} />
       </Routes>
     </>
   )
