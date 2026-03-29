@@ -4,7 +4,8 @@ import {
   collection, addDoc, getDocs,
   deleteDoc, doc, updateDoc
 } from 'firebase/firestore'
-import { db } from '../../firebase/config'
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'
+import { db, storage } from '../../firebase/config'
 import toast from 'react-hot-toast'
 
 const CATEGORIES = ['Starters', 'Mains', 'Desserts', 'Drinks']
@@ -14,7 +15,8 @@ const EMPTY_FORM = {
   description: '',
   price: '',
   category: 'Mains',
-  available: true
+  available: true,
+  image: ''
 }
 
 export default function MenuManager() {
@@ -25,6 +27,10 @@ export default function MenuManager() {
   const [editingId, setEditingId] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [activeCategory, setActiveCategory] = useState('All')
+  const [imageFile, setImageFile] = useState(null)
+  const [imagePreview, setImagePreview] = useState(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
 
   useEffect(() => {
     fetchItems()
@@ -44,6 +50,52 @@ export default function MenuManager() {
     setLoading(false)
   }
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be under 5MB!')
+      return
+    }
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
+  }
+
+  const uploadImage = async () => {
+    if (!imageFile) return form.image
+    setUploading(true)
+    try {
+      const fileName = `menu/${Date.now()}_${imageFile.name}`
+      const storageRef = ref(storage, fileName)
+      const uploadTask = uploadBytesResumable(storageRef, imageFile)
+
+      return new Promise((resolve, reject) => {
+        uploadTask.on('state_changed',
+          (snapshot) => {
+            const progress = Math.round(
+              (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+            )
+            setUploadProgress(progress)
+          },
+          (error) => {
+            toast.error('Image upload failed!')
+            setUploading(false)
+            reject(error)
+          },
+          async () => {
+            const url = await getDownloadURL(uploadTask.snapshot.ref)
+            setUploading(false)
+            setUploadProgress(0)
+            resolve(url)
+          }
+        )
+      })
+    } catch (error) {
+      setUploading(false)
+      throw error
+    }
+  }
+
   const handleSubmit = async () => {
     if (!form.name.trim() || !form.price || !form.category) {
       toast.error('Please fill in all required fields!')
@@ -51,10 +103,12 @@ export default function MenuManager() {
     }
     setSubmitting(true)
     try {
+      const imageUrl = await uploadImage()
       const data = {
         ...form,
         price: Number(form.price),
-        available: form.available
+        available: form.available,
+        image: imageUrl || ''
       }
       if (editingId) {
         await updateDoc(doc(db, 'menu', editingId), data)
@@ -65,6 +119,8 @@ export default function MenuManager() {
         toast.success('Item added!')
       }
       setForm(EMPTY_FORM)
+      setImageFile(null)
+      setImagePreview(null)
       fetchItems()
     } catch (error) {
       toast.error('Failed to save item')
@@ -78,8 +134,10 @@ export default function MenuManager() {
       description: item.description,
       price: item.price,
       category: item.category,
-      available: item.available
+      available: item.available,
+      image: item.image || ''
     })
+    setImagePreview(item.image || null)
     setEditingId(item.id)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -184,19 +242,84 @@ export default function MenuManager() {
                 className="w-full mt-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400"
               />
             </div>
+
+            {/* Image Upload */}
+            <div className="sm:col-span-2">
+              <label className="text-sm font-medium text-gray-700">Food Image</label>
+              <div className="mt-1 flex gap-4 items-start">
+                <div className="flex-1">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Max 5MB — JPG, PNG, WEBP supported
+                  </p>
+                  {uploading && (
+                    <div className="mt-2">
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-orange-500 h-2 rounded-full transition-all"
+                          style={{ width: `${uploadProgress}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-orange-500 mt-1">
+                        Uploading... {uploadProgress}%
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Image Preview */}
+                {imagePreview && (
+                  <div className="w-24 h-24 rounded-xl overflow-hidden border border-gray-200 flex-shrink-0">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* URL input option */}
+              <div className="mt-3">
+                <label className="text-xs font-medium text-gray-500">
+                  Or paste image URL directly:
+                </label>
+                <input
+                  type="text"
+                  value={form.image}
+                  onChange={e => {
+                    setForm({ ...form, image: e.target.value })
+                    setImagePreview(e.target.value)
+                    setImageFile(null)
+                  }}
+                  placeholder="https://images.unsplash.com/..."
+                  className="w-full mt-1 px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm"
+                />
+              </div>
+            </div>
           </div>
 
           <div className="flex gap-3 mt-4">
             <button
               onClick={handleSubmit}
-              disabled={submitting}
+              disabled={submitting || uploading}
               className="bg-orange-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-600 transition"
             >
               {submitting ? 'Saving...' : editingId ? 'Update Item' : 'Add Item'}
             </button>
             {editingId && (
               <button
-                onClick={() => { setForm(EMPTY_FORM); setEditingId(null) }}
+                onClick={() => {
+                  setForm(EMPTY_FORM)
+                  setEditingId(null)
+                  setImagePreview(null)
+                  setImageFile(null)
+                }}
                 className="bg-gray-100 text-gray-600 px-6 py-3 rounded-xl font-semibold hover:bg-gray-200 transition"
               >
                 Cancel
@@ -228,39 +351,57 @@ export default function MenuManager() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {filteredItems.map(item => (
-              <div key={item.id} className="bg-white rounded-2xl shadow p-5">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <h3 className="font-bold text-gray-800">{item.name}</h3>
-                    <p className="text-sm text-gray-400">{item.category}</p>
-                    <p className="text-sm text-gray-500 mt-1">{item.description}</p>
-                  </div>
-                  <p className="font-bold text-orange-500">Rs. {item.price}</p>
+              <div key={item.id} className="bg-white rounded-2xl shadow overflow-hidden">
+
+                {/* Item Image */}
+                <div className="h-40 bg-orange-100 overflow-hidden">
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="text-5xl">🍽️</span>
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex gap-2 mt-4">
-                  <button
-                    onClick={() => handleEdit(item)}
-                    className="flex-1 bg-blue-50 text-blue-600 py-2 rounded-xl text-sm font-semibold hover:bg-blue-100 transition"
-                  >
-                    ✏️ Edit
-                  </button>
-                  <button
-                    onClick={() => toggleAvailability(item.id, item.available)}
-                    className={`flex-1 py-2 rounded-xl text-sm font-semibold transition ${
-                      item.available
-                        ? 'bg-green-50 text-green-600 hover:bg-green-100'
-                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                    }`}
-                  >
-                    {item.available ? '✅ Available' : '❌ Unavailable'}
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item.id, item.name)}
-                    className="flex-1 bg-red-50 text-red-500 py-2 rounded-xl text-sm font-semibold hover:bg-red-100 transition"
-                  >
-                    🗑️ Delete
-                  </button>
+                <div className="p-5">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h3 className="font-bold text-gray-800">{item.name}</h3>
+                      <p className="text-sm text-gray-400">{item.category}</p>
+                      <p className="text-sm text-gray-500 mt-1">{item.description}</p>
+                    </div>
+                    <p className="font-bold text-orange-500">Rs. {item.price}</p>
+                  </div>
+
+                  <div className="flex gap-2 mt-4">
+                    <button
+                      onClick={() => handleEdit(item)}
+                      className="flex-1 bg-blue-50 text-blue-600 py-2 rounded-xl text-sm font-semibold hover:bg-blue-100 transition"
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      onClick={() => toggleAvailability(item.id, item.available)}
+                      className={`flex-1 py-2 rounded-xl text-sm font-semibold transition ${
+                        item.available
+                          ? 'bg-green-50 text-green-600 hover:bg-green-100'
+                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                      }`}
+                    >
+                      {item.available ? '✅ Available' : '❌ Unavailable'}
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.id, item.name)}
+                      className="flex-1 bg-red-50 text-red-500 py-2 rounded-xl text-sm font-semibold hover:bg-red-100 transition"
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

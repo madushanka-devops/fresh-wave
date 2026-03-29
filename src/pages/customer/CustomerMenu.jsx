@@ -113,9 +113,22 @@ export default function CustomerMenu() {
         {filteredItems.map(item => (
           <div key={item.id} className="bg-white rounded-2xl shadow p-4 flex flex-col justify-between">
             <div>
-              <div className="bg-orange-100 rounded-xl h-32 flex items-center justify-center mb-3">
-                <span className="text-5xl">🍽️</span>
+
+              
+              <div className="rounded-xl h-32 overflow-hidden mb-3 bg-orange-100">
+                {item.image ? (
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <span className="text-5xl">🍽️</span>
+                </div>
+              )}
               </div>
+
               <h3 className="font-bold text-gray-800">{item.name}</h3>
               <p className="text-gray-500 text-sm mt-1">{item.description}</p>
             </div>
