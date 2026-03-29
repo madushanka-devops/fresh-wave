@@ -49,7 +49,7 @@ export default function Billing() {
         </head>
         <body>
           <h1>🌊 Fresh Wave</h1>
-          <p style="text-align:center">Table: ${order.tableId}</p>
+          <p style="text-align:center">Table: ${order.tableName || order.tableId}</p>
           <p style="text-align:center">Customer: ${order.customerName}</p>
           <p style="text-align:center">${order.createdAt?.toDate().toLocaleString()}</p>
           <div class="divider"></div>
@@ -125,7 +125,7 @@ export default function Billing() {
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <h3 className="font-bold text-gray-800">{order.customerName}</h3>
-                    <p className="text-sm text-gray-400">Table {order.tableId}</p>
+                    <p className="text-sm text-gray-400">Table {order.tableName || order.tableId}</p>
                     <p className="text-xs text-gray-300 mt-1">
                       {order.createdAt?.toDate().toLocaleString()}
                     </p>

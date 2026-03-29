@@ -111,7 +111,7 @@ export default function WaiterDashboard() {
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <h3 className="font-bold text-gray-800 text-lg">
-                        Table {order.tableId}
+                        Table {order.tableName || order.tableId}
                       </h3>
                       <p className="text-sm text-gray-500">{order.customerName}</p>
                     </div>
@@ -149,7 +149,7 @@ export default function WaiterDashboard() {
                 <div key={order.id} className="bg-white rounded-2xl shadow p-5">
                   <div className="flex justify-between items-center">
                     <div>
-                      <h3 className="font-bold text-gray-800">Table {order.tableId}</h3>
+                      <h3 className="font-bold text-gray-800">Table {order.tableName || order.tableId}</h3>
                       <p className="text-sm text-gray-400">{order.customerName}</p>
                     </div>
                     <span className={`text-xs font-bold px-3 py-1 rounded-full ${STATUS_COLORS[order.status]}`}>

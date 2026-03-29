@@ -72,7 +72,7 @@ export default function OrderTracking() {
       {/* Header */}
       <div className="bg-orange-500 text-white px-6 py-5 shadow">
         <h1 className="text-xl font-bold">🌊 Fresh Wave</h1>
-        <p className="text-orange-100 text-sm">Order Tracking — Table {order.tableId}</p>
+        <p className="text-orange-100 text-sm">Order Tracking — Table {order.tableName || order.tableId}</p>
       </div>
 
       <div className="max-w-lg mx-auto p-6 space-y-6">

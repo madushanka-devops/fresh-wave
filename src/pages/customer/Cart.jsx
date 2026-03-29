@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { collection, addDoc, serverTimestamp, getDoc, doc} from 'firebase/firestore'
 import { db } from '../../firebase/config'
 import toast from 'react-hot-toast'
 
@@ -18,7 +18,7 @@ export default function Cart() {
   const removeItem = (itemId) => {
     setCart(prev => prev.filter(i => i.id !== itemId))
   }
-
+  
   const placeOrder = async () => {
     if (cart.length === 0) {
       toast.error('Your cart is empty!')
@@ -30,8 +30,14 @@ export default function Cart() {
     }
     setPlacing(true)
     try {
+
+      // Fetch table name first
+      const tableDoc = await getDoc(doc(db, 'tables', tableId))
+      const tableName = tableDoc.exists() ? tableDoc.data().name : tableId
+
       const orderRef = await addDoc(collection(db, 'orders'), {
         tableId,
+        tableName,
         customerName: customerName.trim(),
         items: cart,
         total: cartTotal,
