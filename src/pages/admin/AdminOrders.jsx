@@ -108,7 +108,7 @@ export default function AdminOrders() {
               <div key={order.id} className="bg-white rounded-2xl shadow p-5">
                 <div className="flex justify-between items-start mb-3">
                   <div>
-                    <h3 className="font-bold text-gray-800">Table {order.tableName || order.tableId}</h3>
+                    <h3 className="font-bold text-gray-800"> {order.tableName || order.tableId}</h3>
                     <p className="text-sm text-gray-400">{order.customerName}</p>
                     <p className="text-xs text-gray-300 mt-1">
                       {order.createdAt?.toDate().toLocaleString()}

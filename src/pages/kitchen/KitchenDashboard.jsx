@@ -113,7 +113,7 @@ export default function KitchenDashboard() {
                 {/* Order Header */}
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="font-bold text-gray-800">Table {order.tableName || order.tableId}</h3>
+                    <h3 className="font-bold text-gray-800"> {order.tableName || order.tableId}</h3>
                     <p className="text-sm text-gray-400">{order.customerName}</p>
                   </div>
                   <span className={`text-xs font-bold px-3 py-1 rounded-full border ${STATUS_COLORS[order.status]}`}>

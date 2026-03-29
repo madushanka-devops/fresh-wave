@@ -125,7 +125,7 @@ export default function Billing() {
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <h3 className="font-bold text-gray-800">{order.customerName}</h3>
-                    <p className="text-sm text-gray-400">Table {order.tableName || order.tableId}</p>
+                    <p className="text-sm text-gray-400"> {order.tableName || order.tableId}</p>
                     <p className="text-xs text-gray-300 mt-1">
                       {order.createdAt?.toDate().toLocaleString()}
                     </p>
